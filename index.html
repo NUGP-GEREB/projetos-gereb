@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Dashboard GEREB - Fiocruz</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #F7F9FC; font-family: 'Inter', sans-serif; padding: 24px; }
+        .dashboard-container { max-width: 1600px; margin: 0 auto; }
+        .header {
+            background: linear-gradient(135deg, #0B3B75 0%, #1A5A9C 100%);
+            border-radius: 24px; padding: 16px 32px; margin-bottom: 28px;
+            display: flex; align-items: center; justify-content: space-between;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.15);
+        }
+        .logo-area { display: flex; align-items: center; gap: 16px; }
+        .logo-area img { height: 60px; width: auto; border-radius: 12px; }
+        .title-area h1 { font-size: 1.3rem; font-weight: 700; color: white; }
+        .title-area p { color: rgba(255,255,255,0.85); font-size: 0.8rem; margin-top: 4px; }
+       
+        .filters-row {
+            background: white; border-radius: 24px; padding: 20px 24px; margin-bottom: 28px;
+            display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+        }
+        .filter-group { flex: 1; min-width: 160px; }
+        .filter-group label { font-weight: 700; font-size: 0.65rem; color: #0B3B75; display: block; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .filter-group select { width: 100%; padding: 10px 12px; border-radius: 14px; border: 1.5px solid #CBDDE6; background: white; font-size: 0.8rem; cursor: pointer; }
+        .clear-filters-btn {
+            background: linear-gradient(135deg, #0B3B75 0%, #1A5A9C 100%);
+            border: none; padding: 10px 22px; border-radius: 40px;
+            font-weight: 600; color: white; cursor: pointer; height: 42px;
+        }
+       
+        .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 32px; }
+        .kpi-card {
+            background: white; border-radius: 20px; padding: 18px 16px; transition: 0.3s;
+            display: flex; justify-content: space-between; align-items: center;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            border-left: 5px solid;
+        }
+        .kpi-card:hover { transform: translateY(-3px); }
+        .kpi-info h4 { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; margin-bottom: 8px; color: #1E2B45; letter-spacing: 0.5px; }
+        .kpi-value { font-size: 1.3rem; font-weight: 800; color: #1E2B45; }
+        .kpi-icon { font-size: 1.8rem; margin-left: 12px; opacity: 0.7; }
+        .card-1 { border-left-color: #0B3B75; } .card-1 .kpi-icon { color: #0B3B75; }
+        .card-2 { border-left-color: #1FA39A; } .card-2 .kpi-icon { color: #1FA39A; }
+        .card-3 { border-left-color: #7CC9D4; } .card-3 .kpi-icon { color: #7CC9D4; }
+        .card-4 { border-left-color: #0B3B75; } .card-4 .kpi-icon { color: #0B3B75; }
+        .card-5 { border-left-color: #1FA39A; } .card-5 .kpi-icon { color: #1FA39A; }
+        .card-6 { border-left-color: #7CC9D4; } .card-6 .kpi-icon { color: #7CC9D4; }
+        .card-7 { border-left-color: #0B3B75; } .card-7 .kpi-icon { color: #0B3B75; }
+        .card-8 { border-left-color: #1FA39A; } .card-8 .kpi-icon { color: #1FA39A; }
+        @media (max-width: 1200px) { .kpi-grid { grid-template-columns: repeat(2, 1fr); } }
+       
+        .charts-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; margin-bottom: 28px; }
+        .chart-card {
+            background: white; border-radius: 24px; padding: 18px 20px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+        }
+        .chart-card h3 {
+            font-size: 0.95rem; font-weight: 800; margin-bottom: 16px; padding-left: 12px;
+            color: #0B3B75; border-left: 4px solid #0B3B75;
+        }
+        .full-width { grid-column: span 2; }
+       
+        .container-com-legenda { display: flex; gap: 20px; align-items: center; flex-wrap: wrap; }
+        .grafico { flex: 2; min-width: 280px; }
+        .legenda { flex: 1; min-width: 220px; background: #F7F9FC; border-radius: 16px; padding: 12px; }
+        .legenda h4 { font-size: 0.75rem; color: #0B3B75; text-align: center; margin-bottom: 12px; }
+        .legenda table { width: 100%; font-size: 0.7rem; border-collapse: collapse; }
+        .legenda td { padding: 8px 4px; border-bottom: 1px solid #E2EDF2; }
+        .legenda td:last-child { text-align: right; font-weight: 600; }
+        .cor { width: 12px; height: 12px; display: inline-block; border-radius: 3px; margin-right: 8px; }
+       
+        .barras-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
+        .coluna { display: flex; flex-direction: column; gap: 12px; }
+        .coluna h4 { font-size: 0.7rem; color: #8FA3B8; margin-bottom: 8px; }
+        .barra-item { display: flex; align-items: center; height: 38px; background-color: #E8EDF2; border-radius: 8px; overflow: hidden; cursor: pointer; }
+        .barra { height: 100%; background: linear-gradient(90deg, #1FA39A, #7CC9D4); border-radius: 8px; display: flex; align-items: center; justify-content: flex-start; position: relative; }
+        .barra-texto { position: absolute; left: 12px; white-space: nowrap; font-size: 0.72rem; font-weight: 600; color: #1E2B45; display: flex; gap: 10px; }
+        .total-item { margin-top: 20px; padding: 12px 16px; background: #F7F9FC; border-radius: 12px; display: flex; justify-content: space-between; font-weight: 700; grid-column: span 2; color: #1E2B45; border: 1px solid #E2EDF2; }
+       
+        .projeto-detalhe-container {
+            background: white; border-radius: 24px; padding: 24px; margin-top: 28px;
+        }
+        .projeto-detalhe-container h3 {
+            font-size: 1rem; font-weight: 800; margin-bottom: 20px; padding-left: 12px;
+            color: #0B3B75; border-left: 4px solid #0B3B75;
+        }
+        .detalhe-filters {
+            display: flex; flex-wrap: wrap; gap: 16px; margin-bottom: 24px;
+            padding: 16px; background: #F7F9FC; border-radius: 16px;
+            align-items: flex-end;
+        }
+        .detalhe-filter-group { flex: 1; min-width: 180px; }
+        .detalhe-filter-group label { font-size: 0.65rem; font-weight: 700; color: #0B3B75; display: block; margin-bottom: 4px; text-transform: uppercase; }
+        .detalhe-filter-group select { width: 100%; padding: 8px 10px; border-radius: 12px; border: 1px solid #CBDDE6; font-size: 0.75rem; background: white; cursor: pointer; }
+        .detalhe-filter-group input { width: 100%; padding: 8px 10px; border-radius: 12px; border: 1px solid #CBDDE6; font-size: 0.75rem; }
+        .detalhe-filter-group button {
+            background: linear-gradient(135deg, #0B3B75 0%, #1A5A9C 100%);
+            border: none; padding: 8px 20px; border-radius: 40px;
+            font-weight: 600; color: white; cursor: pointer; height: 38px;
+        }
+        .projeto-info-detalhe { background: #F0F7FF; border-radius: 16px; padding: 16px; margin-bottom: 20px; border-left: 4px solid #0B3B75; color: #1E2B45; }
+        .projeto-detalhe-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 16px; }
+        .detalhe-item { background: #F7F9FC; padding: 12px; border-radius: 12px; border: 1px solid #E2EDF2; cursor: pointer; transition: all 0.2s; }
+        .detalhe-item:hover { background: #e8f0fe; transform: translateY(-2px); }
+        .detalhe-label { font-size: 0.65rem; text-transform: uppercase; color: #8FA3B8; margin-bottom: 4px; }
+        .detalhe-value { font-size: 0.85rem; font-weight: 600; color: #1E2B45; }
+        .nenhum-projeto { text-align: center; padding: 40px; color: #8FA3B8; }
+       
+        footer { text-align: center; font-size: 0.7rem; color: #8FA3B8; margin-top: 24px; padding: 16px; border-top: 1px solid #E2EDF2; }
+        @media (max-width: 1100px) { .charts-grid { grid-template-columns: 1fr; } .full-width { grid-column: span 1; } .projeto-detalhe-grid { grid-template-columns: repeat(2, 1fr); } }
+    </style>
+</head>
+<body>
+<div class="dashboard-container">
+    <div class="header">
+        <div class="logo-area">
+            <img src="https://i.ibb.co/NdNvHSgd/63544b49-aafa-4819-b624-df47af3e2cf1.jpg" alt="Logo Fiocruz">
+            <div class="title-area">
+                <h1>PANORAMA DOS PROJETOS VIGENTES - GEREB</h1>
+                <p>Situação em maio de 2026</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="filters-row">
+        <div class="filter-group"><label>PROJETO</label><select id="filterProjeto"><option value="">Todos</option></select></div>
+        <div class="filter-group"><label>COORDENADOR</label><select id="filterCoordenador"><option value="">Todos</option></select></div>
+        <div class="filter-group"><label>COORDENAÇÃO</label><select id="filterCoordenacao"><option value="">Todas</option></select></div>
+        <div class="filter-group"><label>TIPO INSTRUMENTO</label><select id="filterTipo"><option value="">Todos</option></select></div>
+        <div class="filter-group"><label>PARCEIRO</label><select id="filterParceiro"><option value="">Todos</option></select></div>
+        <div class="filter-group"><button class="clear-filters-btn" id="clearFiltersBtn">LIMPAR FILTROS</button></div>
+    </div>
+
+    <div class="kpi-grid" id="kpiContainer"></div>
+
+    <div class="charts-grid">
+        <div class="chart-card">
+            <h3>DISTRIBUIÇÃO DE RECURSOS - TEDs</h3>
+            <div class="container-com-legenda">
+                <div class="grafico"><div id="pieTEDChart"></div></div>
+                <div class="legenda">
+                    <h4>DETALHAMENTO</h4>
+                    <table id="tabelaTED"><tbody><tr><td colspan="2">Carregando...</td></tr></tbody></table>
+                </div>
+            </div>
+        </div>
+        <div class="chart-card">
+            <h3>TIPOS DE INSTRUMENTOS</h3>
+            <div class="container-com-legenda">
+                <div class="grafico"><div id="donutInstrumentosChart"></div></div>
+                <div class="legenda">
+                    <h4>DETALHAMENTO</h4>
+                    <table id="tabelaInstrumentos"><tbody><tr><td colspan="2">Carregando...</td></tr></tbody></table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="charts-grid">
+        <div class="chart-card"><h3>MONTANTE POR TIPO DE INSTRUMENTO</h3><div id="horizontalBarChart"></div></div>
+        <div class="chart-card"><h3>VALOR TOTAL POR COORDENAÇÃO</h3>
+            <div class="barras-grid" id="barrasGrid">
+                <div class="coluna" id="coluna1"><h4>MAIORES VALORES</h4></div>
+                <div class="coluna" id="coluna2"><h4>DEMAIS COORDENAÇÕES</h4></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="charts-grid">
+        <div class="chart-card full-width"><h3>EMENDAS PARLAMENTARES</h3><div id="barEmendasChart"></div></div>
+    </div>
+
+    <div class="projeto-detalhe-container">
+        <h3>CONSULTA DE PROJETOS</h3>
+        <div class="detalhe-filters">
+            <div class="detalhe-filter-group"><label>PROJETO FIOTEC</label><select id="detalheFilterProjeto"><option value="">Selecione...</option></select></div>
+            <div class="detalhe-filter-group"><label>COORDENADOR</label><select id="detalheFilterCoordenador"><option value="">Selecione...</option></select></div>
+            <div class="detalhe-filter-group"><label>Nº INSTRUMENTO</label><input type="text" id="detalheFilterInstrumento" placeholder="Digite o número"></div>
+            <div class="detalhe-filter-group"><button id="buscarProjetoBtn">BUSCAR</button></div>
+            <div class="detalhe-filter-group"><button id="limparDetalheBtn" style="background:#8FA3B8;">LIMPAR</button></div>
+        </div>
+        <div id="projetoDetalheContent">
+            <div class="nenhum-projeto">Selecione um projeto nos filtros acima para visualizar os detalhes</div>
+        </div>
+    </div>
+
+    <footer>Total de projetos: <span id="totalProjetosFooter">--</span></footer>
+</div>
+
+<script>
+    // ============================================================
+    // DADOS COMPLETOS DA PLANILHA
+    // ============================================================
+
+    const projetos = [
+        { id: "GEREB-005-FEX-20", coordenador: "Wagner de Jesus Martins", coord: "COLABORATÓRIO", tipo: "CONVÊNIO PD&I", parceiro: "FAP/DF", numInstrumento: "59/2020", valor: 10000000, liberado: 12473437.31, receber: 0, realizado: 9863851.66, comprometido: 231787.75, saldo: 2377797.9, tedSuporte: false, catTED: "" },
+        { id: "GEREB-007-FIO-20", coordenador: "Noely Fabiana Oliveira De Moura", coord: "NEVS", tipo: "TED", parceiro: "MINISTÉRIO DA SAÚDE", numInstrumento: "49/2020", valor: 35000000, liberado: 35699760.47, receber: 2000000, realizado: 33848636.39, comprometido: 1291468.63, saldo: 559655.45, tedSuporte: false, catTED: "TED MS" },
+        { id: "GEREB-008-FIO-20", coordenador: "José Antonio Silvestre Fernandes Neto", coord: "ASSESSORIAS", tipo: "TED", parceiro: "MINISTÉRIO DA SAÚDE", numInstrumento: "50/2020", valor: 31103328, liberado: 31197820.95, receber: 2500000, realizado: 31113977.87, comprometido: 138285.75, saldo: -54442.67, tedSuporte: true, catTED: "TED de SUPORTE" },
+        { id: "GEREB-022-FIO-20", coordenador: "Luciana Sepúlveda Köptcke", coord: "EGF", tipo: "TED", parceiro: "MINISTÉRIO DA SAÚDE", numInstrumento: "109/2020", valor: 4291963, liberado: 4501992.38, receber: 41292, realizado: 4175995.35, comprometido: 279027, saldo: 46970.03, tedSuporte: false, catTED: "TED MS" },
+        { id: "GEREB-013-FIO-21", coordenador: "Daniella Cristina Rodrigues Pereira", coord: "CPP", tipo: "TED", parceiro: "MINISTÉRIO DA SAÚDE", numInstrumento: "52/2021", valor: 55407026, liberado: 59138668.8, receber: 0, realizado: 53924014.11, comprometido: 6584496.09, saldo: -1369841.4, tedSuporte: true, catTED: "TED de SUPORTE" },
+        { id: "GEREB-009-FEX-22", coordenador: "André Vinícius Pires Guerrero", coord: "NUSMAD", tipo: "CONVÊNIO PD&I", parceiro: "SES/DF", numInstrumento: "57/2022", valor: 4117133.33, liberado: 2275557.77, receber: 1991646, realizado: 2197066.98, comprometido: 9600, saldo: 68890.79, tedSuporte: false, catTED: "" },
+        { id: "GEREB-010-FEX-22", coordenador: "Kellen Cristina Da Silva Gasque", coord: "UNASUS", tipo: "CONVÊNIO PD&I", parceiro: "ADAPS", numInstrumento: "70/2022", valor: 37071299.38, liberado: 38745542.56, receber: 0, realizado: 37066820.29, comprometido: 45287.9, saldo: 1633434.37, tedSuporte: false, catTED: "" },
+        { id: "GEREB-021-FIO-22", coordenador: "Noely Fabiana Oliveira De Moura", coord: "NEVS", tipo: "TED", parceiro: "MINISTÉRIO DA SAÚDE", numInstrumento: "25/2022", valor: 1500000, liberado: 1587336.02, receber: 0, realizado: 1552629.88, comprometido: 22490, saldo: 12216.14, tedSuporte: false, catTED: "TED MS" },
+        { id: "GEREB-024-FIO-22", coordenador: "Kellen Cristina Da Silva Gasque", coord: "UNASUS", tipo: "TED", parceiro: "MINISTÉRIO DA SAÚDE", numInstrumento: "14/2022", valor: 2826360, liberado: 3098078.55, receber: 0, realizado: 2561849.9, comprometido: 87510.4, saldo: 448718.25, tedSuporte: false, catTED: "TED MS" },
+        { id: "GEREB-001-FIO-23", coordenador: "Kellen Cristina Da Silva Gasque", coord: "UNASUS", tipo: "TED", parceiro: "MINISTÉRIO DA SAÚDE", numInstrumento: "79/2022", valor: 3500000, liberado: 3165566.99, receber: 527815, realizado: 2908857.83, comprometido: 229026.36, saldo: 27682.8, tedSuporte: false, catTED: "TED MS" },
+        { id: "GEREB-002-FIO-23", coordenador: "Maria Do Carmo Leal", coord: "COLABORATÓRIO", tipo: "EMENDA PARLAMENTAR", parceiro: "DEP. PAULA BELMONTE", numInstrumento: "40530019", valor: 542153, liberado: 587154.2, receber: 1153, realizado: 474849.32, comprometido: 82700, saldo: 29604.88, tedSuporte: false, catTED: "" },
+        { id: "GEREB-015-FIO-23", coordenador: "André Luiz Dutra Fenner", coord: "PSAT", tipo: "EMENDA PARLAMENTAR", parceiro: "EMENDA COMISSÃO DEFESA DOS DIREITOS DA MULHER", numInstrumento: "50360004", valor: 503310, liberado: 293627.68, receber: 218310, realizado: 290784.78, comprometido: 0, saldo: 2842.9, tedSuporte: false, catTED: "" },
+        { id: "GEREB-019-FIO-23", coordenador: "Wagner de Jesus Martins", coord: "COLABORATÓRIO", tipo: "TED", parceiro: "MINISTÉRIO DAS CIDADES", numInstrumento: "001/2023", valor: 45038140, liberado: 49257113.27, receber: 430512, realizado: 34940932.39, comprometido: 1996465.32, saldo: 12319715.56, tedSuporte: false, catTED: "Outros TEDs" },
+        { id: "GEREB-018-FIO-23", coordenador: "José Antonio Silvestre Fernandes Neto", coord: "ASSESSORIAS", tipo: "TED", parceiro: "MINISTÉRIO DA SAÚDE", numInstrumento: "15/2023", valor: 183000000, liberado: 96625361.56, receber: 88716667, realizado: 91549885.72, comprometido: 2092357.02, saldo: 2983118.82, tedSuporte: true, catTED: "TED de SUPORTE" },
+        { id: "GEREB-023-FIO-23", coordenador: "Márcio Aldrin França Cavalcante", coord: "NUGP", tipo: "TED", parceiro: "MINISTÉRIO DA SAÚDE", numInstrumento: "37/2023", valor: 60352517, liberado: 38635586.67, receber: 23098507.78, realizado: 28629162.01, comprometido: 184435.22, saldo: 9821989.44, tedSuporte: true, catTED: "TED de SUPORTE" },
+        { id: "GEREB-021-FIO-23", coordenador: "Noely Fabiana Oliveira De Moura", coord: "NEVS", tipo: "TED", parceiro: "MINISTÉRIO DA SAÚDE", numInstrumento: "10/2023", valor: 4500000, liberado: 4386123.54, receber: 757500, realizado: 1822243.77, comprometido: 227025, saldo: 2336854.77, tedSuporte: false, catTED: "TED MS" },
+        { id: "GEREB-022-FIO-23", coordenador: "Denise Oliveira E Silva", coord: "PALIN", tipo: "TED", parceiro: "MINISTÉRIO DA IGUALDADE RACIAL", numInstrumento: "18/2023", valor: 4803000, liberado: 4983125.42, receber: 250000, realizado: 4201070.36, comprometido: 118110.8, saldo: 663944.26, tedSuporte: false, catTED: "Outros TEDs" },
+        { id: "GEREB-024-FIO-23", coordenador: "Denise Oliveira E Silva", coord: "PALIN", tipo: "TED", parceiro: "MINISTÉRIO DO DESENVOLVIMENTO E ASSISTÊNCIA SOCIAL", numInstrumento: "06/2023", valor: 5990000, liberado: 6299926.66, receber: 0, realizado: 6295887.95, comprometido: 3946.38, saldo: 92.33, tedSuporte: false, catTED: "Outros TEDs" },
+        { id: "GEREB-025-FIO-23", coordenador: "André Vinícius Pires Guerrero", coord: "NUSMAD", tipo: "TED", parceiro: "MINISTÉRIO DA JUSTIÇA E SEGURANÇA PÚBLICA", numInstrumento: "04/2023", valor: 25748326.34, liberado: 25667009.39, receber: 1162386.6, realizado: 24596925.08, comprometido: 433678.1, saldo: 636406.21, tedSuporte: false, catTED: "Outros TEDs" },
+        { id: "GEREB-029-FIO-23", coordenador: "Wagner de Jesus Martins", coord: "COLABORATÓRIO", tipo: "TED", parceiro: "MINISTÉRIO DA SAÚDE", numInstrumento: "39/2023", valor: 5000000, liberado: 3768588.41, receber: 1350000, realizado: 3449864.68, comprometido: 99429.02, saldo: 219294.71, tedSuporte: true, catTED: "TED de SUPORTE" },
+        { id: "GEREB-030-FIO-23", coordenador: "Osvaldo Peralta Bonetti", coord: "ANGICOS", tipo: "EMENDA PARLAMENTAR", parceiro: "DEP. BOHN GASS", numInstrumento: "28620017", valor: 828367, liberado: 874664.23, receber: 0, realizado: 833589.41, comprometido: 10000, saldo: 31074.82, tedSuporte: false, catTED: "" },
+        { id: "GEREB-031-FIO-23", coordenador: "Osvaldo Peralta Bonetti", coord: "ANGICOS", tipo: "TED", parceiro: "MINISTÉRIO DA SAÚDE", numInstrumento: "63/2023", valor: 23698852, liberado: 24557495.29, receber: 98852, realizado: 23985535.25, comprometido: 280549.26, saldo: 291410.78, tedSuporte: false, catTED: "TED MS" },
+        { id: "GEREB-032-FIO-23", coordenador: "Wagner de Jesus Martins", coord: "COLABORATÓRIO", tipo: "TED", parceiro: "MINISTÉRIO DOS DIREITOS HUMANOS E DA CIDADANIA", numInstrumento: "30993120230001-00166", valor: 2375000, liberado: 2524075.1, receber: 0, realizado: 2470891.71, comprometido: 17999.12, saldo: 35184.27, tedSuporte: false, catTED: "Outros TEDs" },
+        { id: "GEREB-033-FIO-23", coordenador: "Márcio Aldrin França Cavalcante", coord: "NUGP", tipo: "TED", parceiro: "MINISTÉRIO DA SAÚDE", numInstrumento: "55/2023", valor: 40991199, liberado: 19730083.56, receber: 22000000, realizado: 17722923.05, comprometido: 2422295.29, saldo: -415134.78, tedSuporte: true, catTED: "TED de SUPORTE" },
+        { id: "GEREB-036-FIO-23", coordenador: "José Antonio Silvestre Fernandes Neto", coord: "ASSESSORIAS", tipo: "TED", parceiro: "MINISTÉRIO DOS DIREITOS HUMANOS E DA CIDADANIA", numInstrumento: "06/2023", valor: 4625000, liberado: 4769430.49, receber: 0, realizado: 4331608.57, comprometido: 419574.28, saldo: 18247.64, tedSuporte: false, catTED: "Outros TEDs" },
+        { id: "GEREB-035-FIO-23", coordenador: "Kellen Cristina Da Silva Gasque", coord: "UNASUS", tipo: "TED", parceiro: "MINISTÉRIO DA SAÚDE", numInstrumento: "79/2023", valor: 3000000, liberado: 2191213.21, receber: 1000000, realizado: 496405.13, comprometido: 54382.5, saldo: 1640425.58, tedSuporte: false, catTED: "TED MS" },
+        { id: "GEREB-037-FIO-23", coordenador: "Wagner de Jesus Martins", coord: "COLABORATÓRIO", tipo: "TED", parceiro: "MINISTÉRIO DA SAÚDE", numInstrumento: "65/2023", valor: 19594720, liberado: 10616736.68, receber: 9121680, realizado: 9705016.6, comprometido: 259286.78, saldo: 652433.3, tedSuporte: true, catTED: "TED de SUPORTE" },
+        { id: "GEREB-001-FIO-24", coordenador: "André Vinícius Pires Guerrero", coord: "NUSMAD", tipo: "TED", parceiro: "MINISTÉRIO DA SAÚDE", numInstrumento: "72/2023", valor: 41370186, liberado: 42277759.01, receber: 1370186.03, realizado: 33593542.28, comprometido: 6700115.38, saldo: 1984101.35, tedSuporte: false, catTED: "TED MS" },
+        { id: "GEREB-002-FIO-24", coordenador: "Débora Dupas Gonçalves Do Nascimento", coord: "UNASUS", tipo: "TED", parceiro: "MINISTÉRIO DA SAÚDE", numInstrumento: "64/2023", valor: 2176078, liberado: 1743803.1, receber: 576582, realizado: 954672.86, comprometido: 77670.68, saldo: 711459.56, tedSuporte: false, catTED: "TED MS" },
+        { id: "GEREB-003-FIO-24", coordenador: "Noely Fabiana Oliveira De Moura", coord: "NEVS", tipo: "TED", parceiro: "MINISTÉRIO DA SAÚDE", numInstrumento: "82/2023", valor: 15200000, liberado: 8913493.43, receber: 7035000, realizado: 3739981.88, comprometido: 444120, saldo: 4729391.55, tedSuporte: true, catTED: "TED de SUPORTE" },
+        { id: "GEREB-008-FIO-24", coordenador: "Osvaldo Peralta Bonetti", coord: "ANGICOS", tipo: "TED", parceiro: "MINISTÉRIO DA SAÚDE", numInstrumento: "108/2023", valor: 5123000, liberado: 4758226.1, receber: 512300, realizado: 4453558.32, comprometido: 109500, saldo: 195167.78, tedSuporte: false, catTED: "TED MS" },
+        { id: "GEREB-009-FIO-24", coordenador: "André Luiz Dutra Fenner", coord: "PSAT", tipo: "TED", parceiro: "MINISTÉRIO DA SAÚDE", numInstrumento: "168/2023", valor: 24300010, liberado: 20222134.91, receber: 6060007, realizado: 10550285.01, comprometido: 1175978.51, saldo: 8495871.39, tedSuporte: false, catTED: "TED MS" },
+        { id: "GEREB-011-FIO-24", coordenador: "Manoel De Araújo Amorim", coord: "NETHIS", tipo: "TED", parceiro: "MINISTÉRIO DA SAÚDE", numInstrumento: "120/2023", valor: 1850253, liberado: 1988751.41, receber: 0, realizado: 1951098.85, comprometido: 31276.17, saldo: 6376.39, tedSuporte: false, catTED: "TED MS" },
+        { id: "GEREB-010-FIO-24", coordenador: "Flávia Tavares Silva Elias", coord: "PEPTS", tipo: "TED", parceiro: "MINISTÉRIO DA SAÚDE", numInstrumento: "137/2023", valor: 2461725, liberado: 2690126.61, receber: 125225, realizado: 1189949.37, comprometido: 137807.43, saldo: 1362369.81, tedSuporte: false, catTED: "TED MS" },
+        { id: "GEREB-012-FIO-24", coordenador: "Denise Oliveira E Silva", coord: "PALIN", tipo: "TED", parceiro: "MINISTÉRIO DA SAÚDE", numInstrumento: "166/2023", valor: 32210366, liberado: 18512400.22, receber: 14952566.02, realizado: 18092876.18, comprometido: 385545.8, saldo: 33978.24, tedSuporte: true, catTED: "TED de SUPORTE" },
+        { id: "GEREB-013-FIO-24", coordenador: "Wagner de Jesus Martins", coord: "COLABORATÓRIO", tipo: "TED", parceiro: "MINISTÉRIO DA SAÚDE", numInstrumento: "142/2023", valor: 9000000, liberado: 4265223.18, receber: 5000000, realizado: 3475153.96, comprometido: 666705.9, saldo: 123363.32, tedSuporte: false, catTED: "TED MS" },
+        { id: "GEREB-014-FIO-24", coordenador: "André Vinícius Pires Guerrero", coord: "NUSMAD", tipo: "TED", parceiro: "MINISTÉRIO DA SAÚDE", numInstrumento: "86/2023", valor: 46838859, liberado: 31198858.27, receber: 17865457.01, realizado: 17235786.93, comprometido: 3565240.6, saldo: 10397830.74, tedSuporte: true, catTED: "TED de SUPORTE" },
+        { id: "GEREB-017-FIO-24", coordenador: "Osvaldo Peralta Bonetti", coord: "ANGICOS", tipo: "EMENDA PARLAMENTAR", parceiro: "DEP. ANA PAULA LIMA", numInstrumento: "4310004", valor: 500000, liberado: 526350.33, receber: 0, realizado: 470207.04, comprometido: 4600, saldo: 51543.29, tedSuporte: false, catTED: "" },
+        { id: "GEREB-018-FIO-24", coordenador: "Osvaldo Peralta Bonetti", coord: "ANGICOS", tipo: "EMENDA PARLAMENTAR", parceiro: "DEP. CARMEN ZANOTTO", numInstrumento: "2950003", valor: 1000000, liberado: 863227.67, receber: 154999.98, realizado: 362598.63, comprometido: 46769.57, saldo: 453859.47, tedSuporte: false, catTED: "" },
+        { id: "GEREB-019-FIO-24", coordenador: "Osvaldo Peralta Bonetti", coord: "ANGICOS", tipo: "EMENDA PARLAMENTAR", parceiro: "DEP. DENISE PESSOA", numInstrumento: "43530010", valor: 2000000, liberado: 2124084.81, receber: 10000, realizado: 1388730.56, comprometido: 159068.8, saldo: 576285.45, tedSuporte: false, catTED: "" },
+        { id: "GEREB-020-FIO-24", coordenador: "André Luiz Dutra Fenner", coord: "PSAT", tipo: "EMENDA PARLAMENTAR", parceiro: "DEP. DAIANA SANTOS", numInstrumento: "43320013", valor: 1500000, liberado: 1548933.33, receber: 2000, realizado: 1014603.57, comprometido: 79189.54, saldo: 455140.22, tedSuporte: false, catTED: "" },
+        { id: "GEREB-023-FIO-24", coordenador: "Bruno Leonardo Alves De Andrade", coord: "ASSESSORIAS", tipo: "TED", parceiro: "MINISTÉRIO DOS DIREITOS HUMANOS E DA CIDADANIA", numInstrumento: "01/2024", valor: 10913167.94, liberado: 8927836.5, receber: 2913167.94, realizado: 5406699.97, comprometido: 779285.97, saldo: 2741850.56, tedSuporte: false, catTED: "Outros TEDs" },
+        { id: "GEREB-025-FIO-24", coordenador: "José Antonio Silvestre Fernandes Neto", coord: "ASSESSORIAS", tipo: "EMENDA PARLAMENTAR", parceiro: "DEP. REGINALDO VERAS", numInstrumento: "44490015", valor: 1000000, liberado: 1015755.5, receber: 0, realizado: 802787.31, comprometido: 44000, saldo: 168968.19, tedSuporte: false, catTED: "" },
+        { id: "GEREB-027-FIO-24", coordenador: "Osvaldo Peralta Bonetti", coord: "ANGICOS", tipo: "EMENDA PARLAMENTAR", parceiro: "DEP. JACK ROCHA", numInstrumento: "4370003", valor: 2300000, liberado: 1327689.31, receber: 1100000, realizado: 1122070.5, comprometido: 75300, saldo: 130318.81, tedSuporte: false, catTED: "" },
+        { id: "GEREB-031-FIO-24", coordenador: "Osvaldo Peralta Bonetti", coord: "ANGICOS", tipo: "EMENDA PARLAMENTAR", parceiro: "DEP. JULIANA CARDOSO", numInstrumento: "44020014", valor: 3900000, liberado: 3412405.68, receber: 750000, realizado: 2337494.24, comprometido: 187905.92, saldo: 887005.52, tedSuporte: false, catTED: "" },
+        { id: "GEREB-030-FIO-24", coordenador: "Osvaldo Peralta Bonetti", coord: "ANGICOS", tipo: "EMENDA PARLAMENTAR", parceiro: "DEP. ANA PIMENTEL", numInstrumento: "43020022", valor: 300000, liberado: 314522.75, receber: 1000, realizado: 156998.91, comprometido: 58400, saldo: 99123.84, tedSuporte: false, catTED: "" },
+        { id: "GEREB-035-FIO-24", coordenador: "André Vinícius Pires Guerrero", coord: "NUSMAD", tipo: "EMENDA PARLAMENTAR", parceiro: "DEP. ERIKA KOKAY", numInstrumento: "28260008", valor: 300000, liberado: 312495.29, receber: 1000, realizado: 268727.84, comprometido: 4070, saldo: 39697.45, tedSuporte: false, catTED: "" },
+        { id: "GEREB-036-FIO-24", coordenador: "Osvaldo Peralta Bonetti", coord: "ANGICOS", tipo: "EMENDA PARLAMENTAR", parceiro: "DEP. DAIANA SANTOS", numInstrumento: "43320013", valor: 600000, liberado: 562263.9, receber: 44500.01, realizado: 119152.89, comprometido: 0, saldo: 443111.01, tedSuporte: false, catTED: "" },
+        { id: "GEREB-028-FIO-24", coordenador: "André Luiz Dutra Fenner", coord: "PSAT", tipo: "EMENDA PARLAMENTAR", parceiro: "DEP. NILTO TATTO", numInstrumento: "37350005", valor: 1000000, liberado: 768898.68, receber: 250000, realizado: 668807.52, comprometido: 16000, saldo: 84091.16, tedSuporte: false, catTED: "" },
+        { id: "GEREB-037-FIO-24", coordenador: "Wagner de Jesus Martins", coord: "COLABORATÓRIO", tipo: "EMENDA PARLAMENTAR", parceiro: "DEP. ERIKA KOKAY", numInstrumento: "28260008", valor: 550000, liberado: 568468.01, receber: 1650, realizado: 437252.28, comprometido: 57500, saldo: 73715.73, tedSuporte: false, catTED: "" },
+        { id: "GEREB-043-FIO-24", coordenador: "Wagner de Jesus Martins", coord: "COLABORATÓRIO", tipo: "EMENDA PARLAMENTAR", parceiro: "DEP. VICENTINHO", numInstrumento: "19970005", valor: 850000, liberado: 584419.52, receber: 317116.75, realizado: 349781.07, comprometido: 68433, saldo: 166205.45, tedSuporte: false, catTED: "" },
+        { id: "GEREB-040-FIO-24", coordenador: "Wagner de Jesus Martins", coord: "COLABORATÓRIO", tipo: "EMENDA PARLAMENTAR", parceiro: "DEP. CARLOS VERAS", numInstrumento: "39310004", valor: 1000000, liberado: 771928.05, receber: 250000, realizado: 491416.22, comprometido: 57000, saldo: 223511.83, tedSuporte: false, catTED: "" },
+        { id: "GEREB-045-FIO-24", coordenador: "Jorge Mesquita Huet Machado", coord: "PSAT", tipo: "EMENDA PARLAMENTAR", parceiro: "DEP. DAIANA SANTOS", numInstrumento: "28260008", valor: 500000, liberado: 537119.37, receber: 1000, realizado: 376655.24, comprometido: 53031.73, saldo: 107432.4, tedSuporte: false, catTED: "" },
+        { id: "GEREB-038-FIO-24", coordenador: "André Luiz Dutra Fenner", coord: "PSAT", tipo: "EMENDA PARLAMENTAR", parceiro: "DEP. DAIANA SANTOS", numInstrumento: "28260008", valor: 1000000, liberado: 1065160.49, receber: 1000, realizado: 503423.48, comprometido: 132100, saldo: 429637.01, tedSuporte: false, catTED: "" },
+        { id: "GEREB-044-FIO-24", coordenador: "Wagner de Jesus Martins", coord: "COLABORATÓRIO", tipo: "EMENDA PARLAMENTAR", parceiro: "DEP. BOHN GASS", numInstrumento: "28620022", valor: 250000, liberado: 250455.3, receber: 12500, realizado: 120304.52, comprometido: 28700, saldo: 101450.78, tedSuporte: false, catTED: "" },
+        { id: "GEREB-039-FIO-24", coordenador: "Osvaldo Peralta Bonetti", coord: "ANGICOS", tipo: "EMENDA PARLAMENTAR", parceiro: "DEP. BOHN GASS", numInstrumento: "28620022", valor: 950000, liberado: 656312.18, receber: 300000, realizado: 131518.65, comprometido: 0, saldo: 524793.53, tedSuporte: false, catTED: "" },
+        { id: "GEREB-033-FIO-24", coordenador: "Wagner de Jesus Martins", coord: "COLABORATÓRIO", tipo: "EMENDA PARLAMENTAR", parceiro: "DEP. AIRTON FALEIRO", numInstrumento: "39010009", valor: 650000, liberado: 645155.76, receber: 32500, realizado: 442191.13, comprometido: 17500, saldo: 185464.63, tedSuporte: false, catTED: "" },
+        { id: "GEREB-041-FIO-24", coordenador: "André Luiz Dutra Fenner", coord: "PSAT", tipo: "EMENDA PARLAMENTAR", parceiro: "DEP. MARIA DO ROSÁRO", numInstrumento: "19830007", valor: 600000, liberado: 619888.31, receber: 1000, realizado: 447997.21, comprometido: 0.01, saldo: 171891.09, tedSuporte: false, catTED: "" },
+        { id: "GEREB-048-FIO-24", coordenador: "Jorge Mesquita Huet Machado", coord: "PSAT", tipo: "EMENDA PARLAMENTAR", parceiro: "DEP. ODAIR CUNHA", numInstrumento: "14070012", valor: 400000, liberado: 418575.47, receber: 1000, realizado: 413746.45, comprometido: 0, saldo: 4829.02, tedSuporte: false, catTED: "" },
+        { id: "GEREB-049-FIO-24", coordenador: "Jorge Mesquita Huet Machado", coord: "PSAT", tipo: "EMENDA PARLAMENTAR", parceiro: "DEP. ROGÉRIO CORREIA", numInstrumento: "40640003", valor: 450000, liberado: 461734.9, receber: 6180, realizado: 426163.39, comprometido: 14500, saldo: 21071.51, tedSuporte: false, catTED: "" },
+        { id: "GEREB-050-FIO-24", coordenador: "Wagner de Jesus Martins", coord: "COLABORATÓRIO", tipo: "EMENDA PARLAMENTAR", parceiro: "DEP. DANIEL ALMEIDA", numInstrumento: "13390005", valor: 300000, liberado: 270135.17, receber: 44800, realizado: 137881.02, comprometido: 23300, saldo: 108954.15, tedSuporte: false, catTED: "" },
+        { id: "GEREB-051-FIO-24", coordenador: "Denise Oliveira E Silva", coord: "PALIN", tipo: "EMENDA PARLAMENTAR", parceiro: "DEP. HENIRQUE VIEIRA/TALÍRIA PETRONE", numInstrumento: "40700017/44420003", valor: 850000, liberado: 859500.21, receber: 25000, realizado: 634693.01, comprometido: 10220, saldo: 214587.2, tedSuporte: false, catTED: "" },
+        { id: "GEREB-052-FIO-24", coordenador: "Kellen Cristina Da Silva Gasque", coord: "UNASUS", tipo: "TED", parceiro: "MINISTÉRIO DOS DIREITOS HUMANOS E DA CIDADANIA", numInstrumento: "12/2024", valor: 400000, liberado: 419695.98, receber: 0, realizado: 389065, comprometido: 16000, saldo: 14630.98, tedSuporte: false, catTED: "Outros TEDs" },
+        { id: "GEREB-053-FIO-24", coordenador: "Denise Oliveira E Silva", coord: "PALIN", tipo: "EMENDA PARLAMENTAR", parceiro: "DEP. TARCÍSIO MOTTA", numInstrumento: "44830011", valor: 300000, liberado: 312989.7, receber: 0, realizado: 295601.28, comprometido: 0, saldo: 17388.42, tedSuporte: false, catTED: "" },
+        { id: "GEREB-046-FIO-24", coordenador: "Osvaldo Peralta Bonetti", coord: "ANGICOS", tipo: "EMENDA PARLAMENTAR", parceiro: "DEP. ERIKA KOKAY", numInstrumento: "28260008", valor: 8344584, liberado: 7734610.58, receber: 1169584, realizado: 6288866.77, comprometido: 425266.98, saldo: 1020476.83, tedSuporte: false, catTED: "" },
+        { id: "GEREB-055-FIO-24", coordenador: "Osvaldo Peralta Bonetti", coord: "ANGICOS", tipo: "TED", parceiro: "MINISTÉRIO DA SAÚDE", numInstrumento: "21/2024", valor: 7000000, liberado: 4225904.42, receber: 3000000, realizado: 3026313.56, comprometido: 1086324.83, saldo: 113266.03, tedSuporte: false, catTED: "TED MS" },
+        { id: "GEREB-056-FIO-24", coordenador: "Denise Oliveira E Silva", coord: "PALIN", tipo: "EMENDA PARLAMENTAR", parceiro: "DEP. ERIKA KOKAY", numInstrumento: "28260008", valor: 1700000, liberado: 779651.28, receber: 950000, realizado: 738333.76, comprometido: 139720, saldo: -98402.48, tedSuporte: false, catTED: "" },
+        { id: "GEREB-058-FIO-24", coordenador: "André Vinícius Pires Guerrero", coord: "NUSMAD", tipo: "TED", parceiro: "MINISTÉRIO DA JUSTIÇA E SEGURANÇA PÚBLICA", numInstrumento: "28763109/2024", valor: 15012998.4, liberado: 3299802.68, receber: 12068187.11, realizado: 1957755.43, comprometido: 115000, saldo: 1227047.25, tedSuporte: false, catTED: "Outros TEDs" },
+        { id: "GEREB-060-FIO-24", coordenador: "José Antonio Silvestre Fernandes Neto", coord: "ASSESSORIAS", tipo: "EMENDA PARLAMENTAR", parceiro: "DEP. ERIKA HILTON", numInstrumento: "43680013", valor: 1000000, liberado: 717573.15, receber: 301000, realizado: 553893.54, comprometido: 160320, saldo: 3359.61, tedSuporte: false, catTED: "" },
+        { id: "GEREB-059-FIO-24", coordenador: "André Luiz Dutra Fenner", coord: "PSAT", tipo: "TED", parceiro: "MINISTÉRIO DO DESENVOLVIMENTO AGRÁRIO E AGRICULTURA FAMILIAR", numInstrumento: "30879420240057-00361", valor: 4605581, liberado: 3761542.5, receber: 1000000, realizado: 3302680.31, comprometido: 174100, saldo: 284762.19, tedSuporte: false, catTED: "Outros TEDs" },
+        { id: "GEREB-061-FIO-24", coordenador: "Tainá Raiol Alencar", coord: "NUSAME", tipo: "TED", parceiro: "MINISTÉRIO DA SAÚDE", numInstrumento: "55/2024", valor: 4024057, liberado: 3981590.63, receber: 158548.14, realizado: 3648736.25, comprometido: 306186, saldo: 26668.38, tedSuporte: false, catTED: "TED MS" },
+        { id: "GEREB-062-FIO-24", coordenador: "Wagner de Jesus Martins", coord: "COLABORATÓRIO", tipo: "TED", parceiro: "MINISTÉRIO DO DESENVOLVIMENTO AGRÁRIO E AGRICULTURA FAMILIAR", numInstrumento: "30879420240025-00292", valor: 1795300, liberado: 1513638.48, receber: 395300, realizado: 823515.93, comprometido: 80000, saldo: 610122.55, tedSuporte: false, catTED: "Outros TEDs" },
+        { id: "GEREB-069-FIO-24", coordenador: "André Vinícius Pires Guerrero", coord: "NUSMAD", tipo: "TED", parceiro: "MINISTÉRIO DA SAÚDE", numInstrumento: "119/2024", valor: 2819334.67, liberado: 2915296.27, receber: 19334.66, realizado: 2208114.46, comprometido: 31523.46, saldo: 675658.35, tedSuporte: false, catTED: "TED MS" },
+        { id: "GEREB-070-FEX-24", coordenador: "Maria Do Socorro De Souza", coord: "COLABORATÓRIO", tipo: "CONVÊNIO PD&I", parceiro: "SES/DF", numInstrumento: "027596/2024", valor: 21648000, liberado: 12700023.67, receber: 10348000, realizado: 2354266.27, comprometido: 214834.62, saldo: 10130922.78, tedSuporte: false, catTED: "" },
+        { id: "GEREB-063-FIO-24", coordenador: "Osvaldo Peralta Bonetti", coord: "ANGICOS", tipo: "EMENDA PARLAMENTAR", parceiro: "DEP. JACK ROCHA", numInstrumento: "43970003", valor: 5000000, liberado: 4578763.43, receber: 560000, realizado: 1096125.11, comprometido: 408950, saldo: 3073688.32, tedSuporte: false, catTED: "" },
+        { id: "GEREB-008-FIO-25", coordenador: "Luciana Rezende Da Silva Garcez", coord: "UNASUS", tipo: "TED", parceiro: "MINISTÉRIO DA SAÚDE", numInstrumento: "148/2024", valor: 103000514, liberado: 27710751.79, receber: 75603495.4, realizado: 24346207.76, comprometido: 1277820.46, saldo: 2086723.57, tedSuporte: true, catTED: "TED de SUPORTE" },
+        { id: "GEREB-002-FIO-25", coordenador: "Wagner de Jesus Martins", coord: "COLABORATÓRIO", tipo: "TED", parceiro: "MINISTÉRIO DOS DIREITOS HUMANOS E DA CIDADANIA", numInstrumento: "396665900135.220785/2023-12", valor: 1025000, liberado: 467977.36, receber: 562806.27, realizado: 81978.39, comprometido: 240500, saldo: 145498.97, tedSuporte: false, catTED: "Outros TEDs" },
+        { id: "GEREB-003-FIO-25", coordenador: "Wagner de Jesus Martins", coord: "COLABORATÓRIO", tipo: "TED", parceiro: "MINISTÉRIO DAS MULHERES", numInstrumento: "33/2024", valor: 4000000, liberado: 5079339.47, receber: 20000, realizado: 4218081.64, comprometido: 529575, saldo: 331682.83, tedSuporte: false, catTED: "Outros TEDs" },
+        { id: "GEREB-005-FIO-25", coordenador: "Wagner de Jesus Martins", coord: "COLABORATÓRIO", tipo: "TED", parceiro: "MINISTÉRIO DA SAÚDE", numInstrumento: "137/2024", valor: 50000000, liberado: 3649176.18, receber: 46400000, realizado: 3249843.87, comprometido: 351290, saldo: 48042.31, tedSuporte: false, catTED: "TED MS" },
+        { id: "GEREB-001-FIO-25", coordenador: "André Luiz Dutra Fenner", coord: "PSAT", tipo: "TED", parceiro: "MINISTÉRIO DA IGUALDADE RACIAL", numInstrumento: "32/2024", valor: 600000, liberado: 632584.97, receber: 0, realizado: 396230.7, comprometido: 97751.51, saldo: 138602.76, tedSuporte: false, catTED: "Outros TEDs" },
+        { id: "GEREB-012-FIO-25", coordenador: "André Vinícius Pires Guerrero", coord: "NUSMAD", tipo: "TED", parceiro: "MINISTÉRIO DA SAÚDE", numInstrumento: "126/2024", valor: 52597643, liberado: 2868674.76, receber: 49967760.97, realizado: 1071531.87, comprometido: 159340, saldo: 1637802.89, tedSuporte: false, catTED: "TED MS" },
+        { id: "GEREB-014-FIO-25", coordenador: "Denise Oliveira E Silva", coord: "PALIN", tipo: "TED", parceiro: "MINISTÉRIO DO DESENVOLVIMENTO AGRÁRIO E AGRICULTURA FAMILIAR", numInstrumento: "30879420240059-00364", valor: 6340050, liberado: 4416308.52, receber: 2000100.01, realizado: 1811690.75, comprometido: 107224.97, saldo: 2497392.8, tedSuporte: false, catTED: "Outros TEDs" },
+        { id: "GEREB-009-FIO-25", coordenador: "Denise Oliveira E Silva", coord: "PALIN", tipo: "TED", parceiro: "CONAB", numInstrumento: "39440041", valor: 11150000, liberado: 7915842.03, receber: 3330723.89, realizado: 6123899.2, comprometido: 2029780.1, saldo: -237837.27, tedSuporte: false, catTED: "Outros TEDs" },
+        { id: "GEREB-013-FIO-25", coordenador: "André Luiz Dutra Fenner", coord: "PSAT", tipo: "TED", parceiro: "SECRETARIA GERAL DA PRESIDÊNCIA DA REPÚBLICA", numInstrumento: "11/2024", valor: 550000, liberado: 582264.15, receber: 1000.02, realizado: 405932.85, comprometido: 21900, saldo: 154431.3, tedSuporte: false, catTED: "Outros TEDs" },
+        { id: "GEREB-006-FIO-25", coordenador: "Wagner de Jesus Martins", coord: "COLABORATÓRIO", tipo: "TED", parceiro: "MINISTÉRIO DAS MULHERES", numInstrumento: "42/2024", valor: 16973547, liberado: 17192608.65, receber: 200, realizado: 10201950.17, comprometido: 6555745.68, saldo: 434912.8, tedSuporte: false, catTED: "Outros TEDs" },
+        { id: "GEREB-007-FIO-25", coordenador: "André Luiz Dutra Fenner", coord: "PSAT", tipo: "EMENDA PARLAMENTAR", parceiro: "DEP. DAIANA SANTOS", numInstrumento: "43320013", valor: 850000, liberado: 604074, receber: 265000, realizado: 519950.12, comprometido: 53682.55, saldo: 30441.33, tedSuporte: false, catTED: "" },
+        { id: "GEREB-071-FEX-24", coordenador: "Wagner de Jesus Martins", coord: "COLABORATÓRIO", tipo: "CONVÊNIO PD&I", parceiro: "SES/DF", numInstrumento: "143/2024", valor: 13000000, liberado: 6404035.46, receber: 6849794.67, realizado: 5295062.58, comprometido: 978887.01, saldo: 130085.87, tedSuporte: false, catTED: "" },
+        { id: "GEREB-010-FIO-25", coordenador: "Luciana Sepúlveda Köptcke", coord: "EGF", tipo: "EMENDA PARLAMENTAR", parceiro: "DEP. ERIKA KOKAY", numInstrumento: "28260001", valor: 1000000, liberado: 344015.68, receber: 164224, realizado: 298524.6, comprometido: 6000, saldo: 39491.08, tedSuporte: false, catTED: "" },
+        { id: "GEREB-018-FIO-25", coordenador: "Luciana Rezende Da Silva Garcez", coord: "UNASUS", tipo: "TED", parceiro: "MINISTÉRIO DA SAÚDE", numInstrumento: "153/2024", valor: 34797400, liberado: 11511788.18, receber: 23397400.01, realizado: 5412842.04, comprometido: 1860047.88, saldo: 4238898.26, tedSuporte: true, catTED: "TED de SUPORTE" },
+        { id: "GEREB-017-FIO-25", coordenador: "André Luiz Dutra Fenner", coord: "PSAT", tipo: "EMENDA PARLAMENTAR", parceiro: "DEP. JULIANA CARDOSO", numInstrumento: "44020014", valor: 600000, liberado: 147017.54, receber: 458000, realizado: 112730.92, comprometido: 13000, saldo: 21286.62, tedSuporte: false, catTED: "" },
+        { id: "GEREB-020-FIO-25", coordenador: "André Luiz Dutra Fenner", coord: "PSAT", tipo: "EMENDA PARLAMENTAR", parceiro: "DEP. ERIKA KOKAY", numInstrumento: "28260001", valor: 450000, liberado: 96194.84, receber: 356750, realizado: 91028.66, comprometido: 0, saldo: 5166.18, tedSuporte: false, catTED: "" },
+        { id: "GEREB-019-FIO-25", coordenador: "André Vinícius Pires Guerrero", coord: "NUSMAD", tipo: "TED", parceiro: "MINISTÉRIO DA SAÚDE", numInstrumento: "116/2024", valor: 48080942.73, liberado: 24553320.14, receber: 24720942.73, realizado: 10487266.52, comprometido: 1753042.08, saldo: 12313011.54, tedSuporte: false, catTED: "TED MS" },
+        { id: "GEREB-022-FIO-25", coordenador: "Juliana Bezerra De Souza", coord: "GESTÃO", tipo: "LOA", parceiro: "LOA", numInstrumento: "19/2025", valor: 1000000, liberado: 8205.39, receber: 993199.97, realizado: -4500, comprometido: 133500, saldo: -120794.61, tedSuporte: false, catTED: "" },
+        { id: "GEREB-023-FEX-25", coordenador: "Jorge Otávio Maia Barreto", coord: "COLABORATÓRIO", tipo: "CARTA ACORDO", parceiro: "OPAS", numInstrumento: "SCON2025-00031", valor: 500000, liberado: 459200, receber: 40800, realizado: 303920, comprometido: 4000, saldo: 151280, tedSuporte: false, catTED: "" },
+        { id: "GEREB-021-FIO-25", coordenador: "Osvaldo Peralta Bonetti", coord: "ANGICOS", tipo: "TED", parceiro: "SECRETARIA GERAL DA PRESIDÊNCIA DA REPÚBLICA", numInstrumento: "013/2024", valor: 411414, liberado: 375860.42, receber: 52914, realizado: 363790.17, comprometido: 10974.55, saldo: 1095.7, tedSuporte: false, catTED: "Outros TEDs" },
+        { id: "GEREB-024-FEX-25", coordenador: "Osvaldo Peralta Bonetti", coord: "ANGICOS", tipo: "CONVÊNIO PD&I", parceiro: "GRUPO HOSPITALAR CONCEIÇÃO-GHC", numInstrumento: "001/2025", valor: 12630885, liberado: 0, receber: 12630885, realizado: 0, comprometido: 0, saldo: 0, tedSuporte: false, catTED: "" },
+        { id: "GEREB-026-FIO-25", coordenador: "Luciana Rezende Da Silva Garcez", coord: "UNASUS", tipo: "TED", parceiro: "MINISTÉRIO DA SAÚDE", numInstrumento: "148/2024", valor: 34365486, liberado: 9266932.08, receber: 25233147.58, realizado: 2647883.52, comprometido: 651429.59, saldo: 5967618.97, tedSuporte: false, catTED: "TED MS" },
+        { id: "GEREB-025-FEX-25", coordenador: "Wagner de Jesus Martins", coord: "COLABORATÓRIO", tipo: "CONVÊNIO PD&I", parceiro: "INSTITUTO BRB", numInstrumento: "209/2023", valor: 380000, liberado: 194826.59, receber: 190000, realizado: 98619.78, comprometido: 65800, saldo: 30406.81, tedSuporte: false, catTED: "" },
+        { id: "GEREB-027-FIO-25", coordenador: "Osvaldo Peralta Bonetti", coord: "ANGICOS", tipo: "EMENDA PARLAMENTAR", parceiro: "DEP. ALEXANDRE LINDENMEYER", numInstrumento: "42950012", valor: 1500000, liberado: 714861.49, receber: 805000, realizado: 362972.18, comprometido: 120500, saldo: 231389.31, tedSuporte: false, catTED: "" },
+        { id: "GEREB-029-FIO-25", coordenador: "Valber Da Silva Frutuoso", coord: "PALIN", tipo: "TED", parceiro: "MINISTÉRIO DA IGUALDADE RACIAL", numInstrumento: "6/2025", valor: 5056750, liberado: 1824875.83, receber: 3299225.97, realizado: 1181218.74, comprometido: 525845.94, saldo: 117811.15, tedSuporte: false, catTED: "Outros TEDs" },
+        { id: "GEREB-028-FIO-25", coordenador: "Raphael Alexandre Henriques Patrício", coord: "PALIN", tipo: "TED", parceiro: "MINISTÉRIO DA IGUALDADE RACIAL", numInstrumento: "8/2025", valor: 2074800, liberado: 2032191.75, receber: 89599.77, realizado: 1054770.37, comprometido: 486587.03, saldo: 490834.35, tedSuporte: false, catTED: "Outros TEDs" },
+        { id: "GEREB-030-FIO-25", coordenador: "Noely Fabiana Oliveira De Moura", coord: "NEVS", tipo: "TED", parceiro: "MINISTÉRIO DA SAÚDE", numInstrumento: "018/2025", valor: 40000000, liberado: 4112114.87, receber: 36000000, realizado: 536599.37, comprometido: 145554.69, saldo: 3429960.81, tedSuporte: false, catTED: "TED MS" },
+        { id: "GEREB-011-FIO-25", coordenador: "Osvaldo Peralta Bonetti", coord: "ANGICOS", tipo: "DISPENSA DE TED", parceiro: "MINISTÉRIO DAS MULHERES", numInstrumento: "34/2025", valor: 234000, liberado: 240627.22, receber: 0, realizado: 75764.86, comprometido: 0, saldo: 164862.36, tedSuporte: false, catTED: "" },
+        { id: "GEREB-032-FIO-25", coordenador: "Denise Oliveira E Silva", coord: "PALIN", tipo: "TED", parceiro: "MINISTÉRIO DO DESENVOLVIMENTO E ASSISTÊNCIA SOCIAL", numInstrumento: "013/2025", valor: 5990000, liberado: 2439846.25, receber: 3594000, realizado: 1032494.82, comprometido: 715028.31, saldo: 692323.12, tedSuporte: false, catTED: "Outros TEDs" },
+        { id: "GEREB-033-FIO-25", coordenador: "Márcio Aldrin França Cavalcante", coord: "NUGP", tipo: "TED", parceiro: "MINISTÉRIO DA SAÚDE", numInstrumento: "80/2025", valor: 40000000, liberado: 20000, receber: 39980000, realizado: 12114.54, comprometido: 0, saldo: 7885.46, tedSuporte: false, catTED: "TED MS" },
+        { id: "GEREB-001-FIO-26", coordenador: "Osvaldo Peralta Bonetti", coord: "ANGICOS", tipo: "EMENDA PARLAMENTAR", parceiro: "DEP. ANA PAULA LIMA", numInstrumento: "43010018", valor: 5000000, liberado: 2609000, receber: 2391000, realizado: 248859.92, comprometido: 0, saldo: 2360140.08, tedSuporte: false, catTED: "" },
+        { id: "GEREB-005-FIO-26", coordenador: "Wagner de Jesus Martins", coord: "COLABORATÓRIO", tipo: "TED", parceiro: "MINISTÉRIO DAS CIDADES", numInstrumento: "001/2025", valor: 4000000, liberado: 404042.09, receber: 3600000, realizado: 151048.65, comprometido: 100000, saldo: 152993.44, tedSuporte: false, catTED: "Outros TEDs" },
+        { id: "GEREB-004-FIO-26", coordenador: "André Luiz Dutra Fenner", coord: "PSAT", tipo: "EMENDA PARLAMENTAR", parceiro: "DEP. PEDRO UCZAI", numInstrumento: "28550001", valor: 1450000, liberado: 130500, receber: 1319500, realizado: 12484.56, comprometido: 0, saldo: 118015.44, tedSuporte: false, catTED: "" },
+        { id: "GEREB-009-FIO-26", coordenador: "André Vinícius Pires Guerrero", coord: "NUSMAD", tipo: "TED", parceiro: "MINISTÉRIO DA JUSTIÇA E SEGURANÇA PÚBLICA", numInstrumento: "04/2023", valor: 7168369.27, liberado: 5568480.24, receber: 1688079.3, realizado: 1149065.05, comprometido: 1563600, saldo: 2855815.19, tedSuporte: false, catTED: "Outros TEDs" },
+        { id: "GEREB-007-FIO-26", coordenador: "Osvaldo Peralta Bonetti", coord: "ANGICOS", tipo: "DISPENSA DE TED", parceiro: "SECRETARIA GERAL DA PRESIDÊNCIA DA REPÚBLICA", numInstrumento: "001/2026", valor: 100000, liberado: 100000, receber: 0, realizado: 50862.82, comprometido: 8968.88, saldo: 40168.3, tedSuporte: false, catTED: "" },
+        { id: "GEREB-006-FIO-26", coordenador: "Wagner de Jesus Martins", coord: "COLABORATÓRIO", tipo: "EMENDA PARLAMENTAR", parceiro: "DEP. REGINALDO VERAS", numInstrumento: "44490005", valor: 1300000, liberado: 130527.32, receber: 1170000, realizado: 33155.33, comprometido: 26000, saldo: 71371.99, tedSuporte: false, catTED: "" },
+        { id: "GEREB-003-FIO-26", coordenador: "Wagner de Jesus Martins", coord: "COLABORATÓRIO", tipo: "EMENDA PARLAMENTAR", parceiro: "DEP. AIRTON FALEIRO", numInstrumento: "39010010", valor: 400000, liberado: 240963.2, receber: 160000, realizado: 25149.23, comprometido: 0, saldo: 215813.97, tedSuporte: false, catTED: "" },
+        { id: "GEREB-008-FIO-26", coordenador: "Osvaldo Peralta Bonetti", coord: "ANGICOS", tipo: "EMENDA PARLAMENTAR", parceiro: "DEP. ERIKA KOKAY", numInstrumento: "28260010", valor: 8800000, liberado: 6592000, receber: 2208000, realizado: 629328.11, comprometido: 69000, saldo: 5893671.89, tedSuporte: false, catTED: "" },
+        { id: "GEREB-013-FIO-26", coordenador: "André Luiz Dutra Fenner", coord: "PSAT", tipo: "EMENDA PARLAMENTAR", parceiro: "DEP. NILTO TATTO", numInstrumento: "37350004", valor: 1000000, liberado: 90000, receber: 910000, realizado: 8449.39, comprometido: 0, saldo: 81550.61, tedSuporte: false, catTED: "" },
+        { id: "GEREB-015-FIO-26", coordenador: "André Luiz Dutra Fenner", coord: "PSAT", tipo: "EMENDA PARLAMENTAR", parceiro: "DEP. ERIKA KOKAY", numInstrumento: "28260010", valor: 1800000, liberado: 162000, receber: 1638000, realizado: 15902, comprometido: 0, saldo: 146098, tedSuporte: false, catTED: "" },
+        { id: "GEREB-010-FIO-26", coordenador: "Osvaldo Peralta Bonetti", coord: "ANGICOS", tipo: "EMENDA PARLAMENTAR", parceiro: "DEP. DENISE PESSOA", numInstrumento: "43530003", valor: 3000000, liberado: 0, receber: 3000000, realizado: 0, comprometido: 0, saldo: 0, tedSuporte: false, catTED: "" },
+        { id: "GEREB-018-FIO-26", coordenador: "Kellen Cristina Da Silva Gasque", coord: "UNASUS", tipo: "TED", parceiro: "MINISTÉRIO DA SAÚDE", numInstrumento: "098/2025", valor: 3922084, liberado: 5553.1, receber: 3916530.9, realizado: 5553.1, comprometido: 0, saldo: 0, tedSuporte: false, catTED: "TED MS" },
+        { id: "GEREB-017-FIO-26", coordenador: "Wagner de Jesus Martins", coord: "COLABORATÓRIO", tipo: "TED", parceiro: "MINISTÉRIO DA IGUALDADE RACIAL", numInstrumento: "018/2025", valor: 500000, liberado: 495000, receber: 5000.01, realizado: 48973.07, comprometido: 0, saldo: 446026.93, tedSuporte: false, catTED: "Outros TEDs" },
+        { id: "GEREB-020-FIO-26", coordenador: "Luciana Sepúlveda Köptcke", coord: "EGF", tipo: "TED", parceiro: "MINISTÉRIO DA SAÚDE", numInstrumento: "82/2025", valor: 9990288, liberado: 15954.49, receber: 9974333.51, realizado: 15954.49, comprometido: 0, saldo: 0, tedSuporte: true, catTED: "TED de SUPORTE" },
+        { id: "GEREB-011-FIO-26", coordenador: "André Luiz Dutra Fenner", coord: "PSAT", tipo: "EMENDA PARLAMENTAR", parceiro: "DEP. MÁRCIO JERRY", numInstrumento: "38930008", valor: 267993, liberado: 24119.36, receber: 243873.64, realizado: 2586.17, comprometido: 0, saldo: 21533.19, tedSuporte: false, catTED: "" },
+        { id: "GEREB-019-FIO-26", coordenador: "Wagner de Jesus Martins", coord: "COLABORATÓRIO", tipo: "EMENDA PARLAMENTAR", parceiro: "DEP. ERIKA KOKAY", numInstrumento: "28260010", valor: 550000, liberado: 55000.01, receber: 494999.99, realizado: 5341.72, comprometido: 0, saldo: 49658.29, tedSuporte: false, catTED: "" },
+        { id: "GEREB-021-FIO-26", coordenador: "Vaneide Daciane Pedi", coord: "COLABORATÓRIO", tipo: "TED", parceiro: "MINISTÉRIO DA INTEGRAÇÃO E DO DESENVOLVIMENTO REGIONAL", numInstrumento: "991539/2025", valor: 3000000, liberado: 205309.58, receber: 2795010, realizado: 20195.67, comprometido: 6000, saldo: 179113.91, tedSuporte: false, catTED: "Outros TEDs" },
+        { id: "GEREB-023-FIO-26", coordenador: "Osvaldo Peralta Bonetti", coord: "ANGICOS", tipo: "TED", parceiro: "MINISTÉRIO DAS MULHERES", numInstrumento: "01/2026", valor: 15000000, liberado: 10013410.86, receber: 5000000, realizado: 7101590.24, comprometido: 1017635.9, saldo: 1894184.72, tedSuporte: false, catTED: "Outros TEDs" },
+        { id: "GEREB-022-FIO-26", coordenador: "Osvaldo Peralta Bonetti", coord: "ANGICOS", tipo: "EMENDA PARLAMENTAR", parceiro: "DEP. BOHN GASS", numInstrumento: "28620023", valor: 1400000, liberado: 0, receber: 1400000, realizado: 0, comprometido: 0, saldo: 0, tedSuporte: false, catTED: "" },
+        { id: "GEREB-002-FIO-26", coordenador: "Wagner de Jesus Martins", coord: "COLABORATÓRIO", tipo: "EMENDA PARLAMENTAR", parceiro: "DEP. BOHN GASS", numInstrumento: "28620023", valor: 250000, liberado: 175000, receber: 75000, realizado: 17350.94, comprometido: 0, saldo: 0, tedSuporte: false, catTED: "" },
+        { id: "GEREB-012-FIO-26", coordenador: "André Luiz Dutra Fenner", coord: "PSAT", tipo: "EMENDA PARLAMENTAR", parceiro: "DEP. MARIA DO ROSÁRO", numInstrumento: "19830016", valor: 1400000, liberado: 126000, receber: 1274000, realizado: 22088.15, comprometido: 24000, saldo: 79911.85, tedSuporte: false, catTED: "" },
+        { id: "GEREB-014-FIO-26", coordenador: "Wagner de Jesus Martins", coord: "COLABORATÓRIO", tipo: "TED", parceiro: "MINISTÉRIO DO TRABALHO E EMPREGO", numInstrumento: "43/2025", valor: 5996100, liberado: 99954.98, receber: 5896145.02, realizado: 9737.12, comprometido: 0, saldo: 90217.86, tedSuporte: false, catTED: "Outros TEDs" },
+        { id: "GEREB-024-FIO-26", coordenador: "Wagner de Jesus Martins", coord: "COLABORATÓRIO", tipo: "TED", parceiro: "MINISTÉRIO DO DESENVOLVIMENTO AGRÁRIO E AGRICULTURA FAMILIAR", numInstrumento: "970963/2024", valor: 2497000, liberado: 0, receber: 701700, realizado: 0, comprometido: 0, saldo: 0, tedSuporte: false, catTED: "Outros TEDs" }
+    ];
+
+    // Totais gerais da planilha
+    const TOTAIS_GERAIS = {
+        totalRealizado: 523169236.15,
+        totalComprometido: 51388573.31,
+        totalValorGeral: 1471201460.06
+    };
+
+    let currentFilters = { projeto: '', coordenador: '', coordenacao: '', tipo: '', parceiro: '' };
+    let charts = {};
+
+    function formatMoney(v) {
+        if (isNaN(v) || v === undefined) v = 0;
+        return 'R$ ' + v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function abbreviateNumber(value) {
+        if (value >= 1e9) return (value / 1e9).toFixed(1).replace(/\.0$/, '') + 'B';
+        if (value >= 1e6) return (value / 1e6).toFixed(1).replace(/\.0$/, '') + 'M';
+        if (value >= 1e3) return (value / 1e3).toFixed(1).replace(/\.0$/, '') + 'K';
+        return value.toString();
+    }
+
+    function getFilteredData() {
+        return projetos.filter(p => {
+            if (currentFilters.projeto && p.id !== currentFilters.projeto) return false;
+            if (currentFilters.coordenador && p.coordenador !== currentFilters.coordenador) return false;
+            if (currentFilters.coordenacao && p.coord !== currentFilters.coordenacao) return false;
+            if (currentFilters.tipo && p.tipo !== currentFilters.tipo) return false;
+            if (currentFilters.parceiro && p.parceiro !== currentFilters.parceiro) return false;
+            return true;
+        });
+    }
+
+    function getFilteredTotals(filteredData) {
+        const totalProjetos = filteredData.length;
+        const totalValor = filteredData.reduce((s, p) => s + p.valor, 0);
+        const saldoTotal = filteredData.reduce((s, p) => s + (p.saldo || 0), 0);
+        const recursoLiberado = filteredData.reduce((s, p) => s + (p.liberado || 0), 0);
+        const recursoReceber = filteredData.reduce((s, p) => s + (p.receber || 0), 0);
+        const tedsSuporte = filteredData.filter(p => p.tedSuporte).reduce((s, p) => s + p.valor, 0);
+       
+        const proporcao = TOTAIS_GERAIS.totalValorGeral > 0 ? totalValor / TOTAIS_GERAIS.totalValorGeral : 0;
+        const totalRealizado = TOTAIS_GERAIS.totalRealizado * proporcao;
+        const totalComprometido = TOTAIS_GERAIS.totalComprometido * proporcao;
+       
+        return { totalProjetos, totalValor, saldoTotal, recursoLiberado, recursoReceber, totalRealizado, totalComprometido, tedsSuporte };
+    }
+
+    function updateKPIs() {
+        const filteredData = getFilteredData();
+        const totals = getFilteredTotals(filteredData);
+       
+        document.getElementById('kpiContainer').innerHTML = `
+            <div class="kpi-card card-1"><div class="kpi-info"><h4>📁 PROJETOS VIGENTES</h4><div class="kpi-value">${totals.totalProjetos}</div></div><div class="kpi-icon"><i class="fas fa-folder-open"></i></div></div>
+            <div class="kpi-card card-2"><div class="kpi-info"><h4>💰 VALOR TOTAL DOS PROJETOS</h4><div class="kpi-value">${formatMoney(totals.totalValor)}</div></div><div class="kpi-icon"><i class="fas fa-chart-line"></i></div></div>
+            <div class="kpi-card card-3"><div class="kpi-info"><h4>💵 SALDO TOTAL (Caixa Geral Fiotec)</h4><div class="kpi-value">${formatMoney(totals.saldoTotal)}</div></div><div class="kpi-icon"><i class="fas fa-coins"></i></div></div>
+            <div class="kpi-card card-4"><div class="kpi-info"><h4>📥 RECURSO LIBERADO</h4><div class="kpi-value">${formatMoney(totals.recursoLiberado)}</div></div><div class="kpi-icon"><i class="fas fa-arrow-down"></i></div></div>
+            <div class="kpi-card card-5"><div class="kpi-info"><h4>⏳ A RECEBER</h4><div class="kpi-value">${formatMoney(totals.recursoReceber)}</div></div><div class="kpi-icon"><i class="fas fa-clock"></i></div></div>
+            <div class="kpi-card card-6"><div class="kpi-info"><h4>✅ REALIZADO</h4><div class="kpi-value">${formatMoney(totals.totalRealizado)}</div></div><div class="kpi-icon"><i class="fas fa-check-circle"></i></div></div>
+            <div class="kpi-card card-7"><div class="kpi-info"><h4>🔒 COMPROMETIDO</h4><div class="kpi-value">${formatMoney(totals.totalComprometido)}</div></div><div class="kpi-icon"><i class="fas fa-hand-holding"></i></div></div>
+            <div class="kpi-card card-8"><div class="kpi-info"><h4>🤝 TEDs SUPORTE</h4><div class="kpi-value">${formatMoney(totals.tedsSuporte)}</div></div><div class="kpi-icon"><i class="fas fa-handshake"></i></div></div>
+        `;
+        document.getElementById('totalProjetosFooter').innerText = totals.totalProjetos;
+    }
+
+    function renderPieTED() {
+        const filteredData = getFilteredData();
+        let tedMS = 0, tedSuporte = 0, outrosTEDs = 0;
+       
+        filteredData.filter(p => p.tipo === "TED").forEach(p => {
+            if (p.catTED === "TED MS") tedMS += p.valor;
+            else if (p.catTED === "TED de SUPORTE") tedSuporte += p.valor;
+            else outrosTEDs += p.valor;
+        });
+       
+        const series = [tedMS, tedSuporte, outrosTEDs];
+        const cores = ['#1FA39A', '#0B3B75', '#7CC9D4'];
+       
+        if (charts.pieTED) charts.pieTED.destroy();
+        charts.pieTED = new ApexCharts(document.querySelector("#pieTEDChart"), {
+            chart: { type: 'pie', height: 280 },
+            series: series,
+            labels: ["TED MS", "TED de SUPORTE", "TEDs outros Órgãos"],
+            colors: cores,
+            dataLabels: { enabled: false },
+            legend: { show: false },
+            tooltip: { y: { formatter: (val) => formatMoney(val) } }
+        });
+        charts.pieTED.render();
+       
+        const total = tedMS + tedSuporte + outrosTEDs;
+        document.querySelector('#tabelaTED tbody').innerHTML = `
+            <tr><td><span class="cor" style="background:#1FA39A;"></span> TED MS</td><td>${formatMoney(tedMS)} (${total > 0 ? (tedMS/total*100).toFixed(1) : 0}%)</td></tr>
+            <tr><td><span class="cor" style="background:#0B3B75;"></span> TED de SUPORTE</td><td>${formatMoney(tedSuporte)} (${total > 0 ? (tedSuporte/total*100).toFixed(1) : 0}%)</td></tr>
+            <tr><td><span class="cor" style="background:#7CC9D4;"></span> TEDs outros Órgãos</td><td>${formatMoney(outrosTEDs)} (${total > 0 ? (outrosTEDs/total*100).toFixed(1) : 0}%)</td></tr>
+        `;
+    }
+
+    function renderDonut() {
+        const filteredData = getFilteredData();
+        const tipoCount = {};
+        filteredData.forEach(p => { tipoCount[p.tipo] = (tipoCount[p.tipo] || 0) + 1; });
+        const total = filteredData.length;
+       
+        const coresModernas = ['#0B3B75', '#1FA39A', '#7CC9D4', '#8FA3B8', '#1E2B45'];
+       
+        if (charts.donut) charts.donut.destroy();
+        charts.donut = new ApexCharts(document.querySelector("#donutInstrumentosChart"), {
+            chart: { type: 'donut', height: 280 },
+            series: Object.values(tipoCount),
+            labels: Object.keys(tipoCount),
+            colors: coresModernas,
+            plotOptions: { pie: { donut: { size: '55%' } } },
+            legend: { show: false },
+            dataLabels: { enabled: false },
+            tooltip: { y: { formatter: (val) => val + ' projetos' } }
+        });
+        charts.donut.render();
+       
+        const tabela = document.querySelector('#tabelaInstrumentos tbody');
+        let idx = 0;
+        tabela.innerHTML = Object.entries(tipoCount).map(([nome, qtd]) => {
+            const cor = coresModernas[idx % coresModernas.length];
+            idx++;
+            return `<tr><td><span class="cor" style="background:${cor};"></span> ${nome}</td><td>${qtd} (${(qtd/total*100).toFixed(1)}%)</td></tr>`;
+        }).join('');
+    }
+
+    function renderHorizontalBar() {
+        const filteredData = getFilteredData();
+        const tipoMontante = {};
+        filteredData.forEach(p => { tipoMontante[p.tipo] = (tipoMontante[p.tipo] || 0) + p.valor; });
+        const data = Object.entries(tipoMontante).sort((a,b) => b[1] - a[1]);
+        const totalGeral = data.reduce((s,c) => s + c[1], 0);
+       
+        if (charts.horizontalBar) charts.horizontalBar.destroy();
+        charts.horizontalBar = new ApexCharts(document.querySelector("#horizontalBarChart"), {
+            chart: { type: 'bar', height: 380, toolbar: { show: false } },
+            series: [{ name: 'MONTANTE', data: data.map(i => i[1]) }],
+            xaxis: { categories: data.map(i => i[0]), labels: { style: { fontSize: '12px', fontWeight: '600', colors: '#1E2B45' } }, axisBorder: { show: true, color: '#E2EDF2', height: 1 }, axisTicks: { show: true, color: '#E2EDF2' } },
+            yaxis: { labels: { formatter: (v) => abbreviateNumber(v), style: { fontSize: '11px', fontWeight: '500', colors: '#1E2B45' } }, axisBorder: { show: true, color: '#E2EDF2' }, axisTicks: { show: true, color: '#E2EDF2' } },
+            colors: ['#1FA39A'],
+            plotOptions: { bar: { horizontal: true, borderRadius: 8, barHeight: '65%', dataLabels: { position: 'top' } } },
+            dataLabels: { enabled: true, formatter: (value, { dataPointIndex, w }) => { const percent = totalGeral > 0 ? (value / totalGeral * 100).toFixed(1) : 0; return `${w.globals.labels[dataPointIndex]}: ${abbreviateNumber(value)} (${percent}%)`; }, style: { colors: ['#1E2B45'], fontSize: '10px', fontWeight: '600' }, offsetX: 10, background: { enabled: false } },
+            grid: { show: false },
+            tooltip: { y: { formatter: (val) => formatMoney(val) } }
+        });
+        charts.horizontalBar.render();
+    }
+
+    function renderCoordenacao() {
+        const filteredData = getFilteredData();
+        const coordValor = {};
+        filteredData.forEach(p => { coordValor[p.coord] = (coordValor[p.coord] || 0) + p.valor; });
+        const data = Object.entries(coordValor).sort((a,b) => b[1] - a[1]);
+        const maxValor = data.length > 0 ? data[0][1] : 0;
+        const mid = Math.ceil(data.length / 2);
+       
+        function renderColuna(items, containerId) {
+            const container = document.getElementById(containerId);
+            const title = container.querySelector('h4');
+            container.innerHTML = '';
+            if (title) container.appendChild(title);
+            if (items.length === 0) { container.innerHTML += '<div style="color:#8FA3B8; padding:16px;">Nenhum dado</div>'; return; }
+            items.forEach(([nome, valor]) => {
+                const percent = maxValor > 0 ? (valor / maxValor) * 100 : 0;
+                const div = document.createElement('div'); div.className = 'barra-item';
+                const bar = document.createElement('div'); bar.className = 'barra'; bar.style.width = `${percent}%`;
+                const text = document.createElement('div'); text.className = 'barra-texto';
+                text.innerHTML = `<span style="font-weight:700">${nome}</span> <span>${formatMoney(valor)}</span>`;
+                bar.appendChild(text); div.appendChild(bar); container.appendChild(div);
+                div.style.cursor = 'pointer';
+                div.onclick = () => mostrarProjetosPorCoordenacao(nome);
+            });
+        }
+        renderColuna(data.slice(0, mid), 'coluna1');
+        renderColuna(data.slice(mid), 'coluna2');
+       
+        const totalGeral = data.reduce((s,c) => s + c[1], 0);
+        const grid = document.getElementById('barrasGrid');
+        const oldTotal = grid.querySelector('.total-item');
+        if (oldTotal) oldTotal.remove();
+        const totalDiv = document.createElement('div'); totalDiv.className = 'total-item';
+        totalDiv.innerHTML = `<span style="font-weight:700">📊 TOTAL GERAL</span><span style="font-weight:800">${formatMoney(totalGeral)}</span>`;
+        grid.appendChild(totalDiv);
+    }
+   
+    function mostrarProjetosPorCoordenacao(coordNome) {
+        const projetosCoord = projetos.filter(p => p.coord === coordNome);
+        const totalValor = projetosCoord.reduce((s,p) => s + p.valor, 0);
+        const totalRealizado = projetosCoord.reduce((s,p) => s + p.realizado, 0);
+       
+        const container = document.getElementById('projetoDetalheContent');
+        if (projetosCoord.length === 0) { container.innerHTML = '<div class="nenhum-projeto">Nenhum projeto encontrado para esta coordenação</div>'; return; }
+       
+        container.innerHTML = `
+            <div class="projeto-info-detalhe">
+                <strong>📍 ${coordNome}</strong> | ${projetosCoord.length} projetos | Valor Total: ${formatMoney(totalValor)} | Realizado: ${formatMoney(totalRealizado)}
+            </div>
+            <div class="projeto-detalhe-grid">
+                ${projetosCoord.map(p => `
+                    <div class="detalhe-item" onclick="mostrarDetalheProjeto('${p.id}')" style="cursor:pointer;">
+                        <div class="detalhe-label">${p.id}</div>
+                        <div class="detalhe-value">${p.tipo}</div>
+                        <div class="detalhe-value" style="font-size:0.7rem; color:#8FA3B8;">${formatMoney(p.valor)}</div>
+                        <div class="detalhe-value" style="font-size:0.65rem; color:#8FA3B8;">${p.coordenador ? p.coordenador.substring(0, 35) : '-'}</div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    }
+   
+    function mostrarDetalheProjeto(projetoId) {
+        const projeto = projetos.find(p => p.id === projetoId);
+        if (!projeto) return;
+       
+        const container = document.getElementById('projetoDetalheContent');
+        container.innerHTML = `
+            <div class="projeto-info-detalhe">
+                <strong>📄 ${projeto.id}</strong> - ${projeto.tipo}<br>
+                Coordenação: ${projeto.coord} | Coordenador: ${projeto.coordenador}
+            </div>
+            <div class="projeto-detalhe-grid">
+                <div class="detalhe-item"><div class="detalhe-label">VALOR TOTAL</div><div class="detalhe-value">${formatMoney(projeto.valor)}</div></div>
+                <div class="detalhe-item"><div class="detalhe-label">PARCEIRO</div><div class="detalhe-value">${projeto.parceiro}</div></div>
+                <div class="detalhe-item"><div class="detalhe-label">Nº INSTRUMENTO</div><div class="detalhe-value">${projeto.numInstrumento}</div></div>
+                <div class="detalhe-item"><div class="detalhe-label">REALIZADO</div><div class="detalhe-value">${formatMoney(projeto.realizado)}</div></div>
+                <div class="detalhe-item"><div class="detalhe-label">COMPROMETIDO</div><div class="detalhe-value">${formatMoney(projeto.comprometido)}</div></div>
+                <div class="detalhe-item"><div class="detalhe-label">SALDO</div><div class="detalhe-value">${formatMoney(projeto.saldo)}</div></div>
+                <div class="detalhe-item"><div class="detalhe-label">RECURSO LIBERADO</div><div class="detalhe-value">${formatMoney(projeto.liberado)}</div></div>
+                <div class="detalhe-item"><div class="detalhe-label">A RECEBER</div><div class="detalhe-value">${formatMoney(projeto.receber)}</div></div>
+                <div class="detalhe-item"><div class="detalhe-label">TED SUPORTE</div><div class="detalhe-value">${projeto.tedSuporte ? 'SIM' : 'NÃO'}</div></div>
+            </div>
+            <div style="margin-top: 16px; text-align: center;">
+                <button onclick="voltarParaLista()" style="background:#8FA3B8; border:none; padding:8px 24px; border-radius:40px; color:white; cursor:pointer;">← VOLTAR</button>
+            </div>
+        `;
+    }
+   
+    function voltarParaLista() {
+        const container = document.getElementById('projetoDetalheContent');
+        container.innerHTML = '<div class="nenhum-projeto">Selecione um projeto nos filtros abaixo para visualizar os detalhes</div>';
+        document.getElementById('detalheFilterProjeto').value = '';
+        document.getElementById('detalheFilterCoordenador').value = '';
+        document.getElementById('detalheFilterInstrumento').value = '';
+    }
+   
+    function buscarProjeto() {
+        const projetoVal = document.getElementById('detalheFilterProjeto').value;
+        const coordenadorVal = document.getElementById('detalheFilterCoordenador').value;
+        const instrumentoVal = document.getElementById('detalheFilterInstrumento').value.trim();
+       
+        let projetoEncontrado = null;
+       
+        if (projetoVal) {
+            projetoEncontrado = projetos.find(p => p.id === projetoVal);
+        } else if (coordenadorVal) {
+            const projetosCoord = projetos.filter(p => p.coordenador === coordenadorVal);
+            if (projetosCoord.length === 1) {
+                projetoEncontrado = projetosCoord[0];
+            } else if (projetosCoord.length > 1) {
+                const container = document.getElementById('projetoDetalheContent');
+                container.innerHTML = `
+                    <div class="projeto-info-detalhe">
+                        <strong>👥 ${projetosCoord.length} projetos encontrados para o coordenador ${coordenadorVal}</strong>
+                    </div>
+                    <div class="projeto-detalhe-grid">
+                        ${projetosCoord.map(p => `
+                            <div class="detalhe-item" onclick="mostrarDetalheProjeto('${p.id}')" style="cursor:pointer;">
+                                <div class="detalhe-label">${p.id}</div>
+                                <div class="detalhe-value">${p.tipo}</div>
+                                <div class="detalhe-value" style="font-size:0.7rem; color:#8FA3B8;">${formatMoney(p.valor)}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+                return;
+            }
+        } else if (instrumentoVal) {
+            projetoEncontrado = projetos.find(p => p.numInstrumento === instrumentoVal);
+        }
+       
+        if (projetoEncontrado) {
+            mostrarDetalheProjeto(projetoEncontrado.id);
+        } else {
+            const container = document.getElementById('projetoDetalheContent');
+            container.innerHTML = '<div class="nenhum-projeto">Nenhum projeto encontrado com os critérios informados</div>';
+        }
+    }
+   
+    function limparDetalhe() {
+        document.getElementById('detalheFilterProjeto').value = '';
+        document.getElementById('detalheFilterCoordenador').value = '';
+        document.getElementById('detalheFilterInstrumento').value = '';
+        voltarParaLista();
+    }
+
+    function renderEmendas() {
+        const filteredData = getFilteredData();
+        const emendasMap = {};
+        filteredData.filter(p => p.tipo === "EMENDA PARLAMENTAR").forEach(p => {
+            let nome = p.parceiro || "Não identificado";
+            if (nome.length > 30) nome = nome.substring(0, 27) + "...";
+            emendasMap[nome] = (emendasMap[nome] || 0) + p.valor;
+        });
+        const data = Object.entries(emendasMap).sort((a,b) => b[1] - a[1]);
+        if (charts.emendas) charts.emendas.destroy();
+        if (data.length === 0) { document.querySelector("#barEmendasChart").innerHTML = '<div style="text-align:center; padding:40px; color:#8FA3B8;">Nenhuma emenda encontrada</div>'; return; }
+        charts.emendas = new ApexCharts(document.querySelector("#barEmendasChart"), {
+            chart: { type: 'bar', height: 400, toolbar: { show: false } },
+            series: [{ name: 'VALOR', data: data.map(e => e[1]) }],
+            xaxis: { categories: data.map(e => e[0]), labels: { rotate: -30, style: { fontSize: '10px', fontWeight: '600', colors: '#1E2B45' } }, axisBorder: { show: true, color: '#E2EDF2' }, axisTicks: { show: true, color: '#E2EDF2' } },
+            yaxis: { labels: { formatter: (v) => abbreviateNumber(v), style: { fontSize: '10px', fontWeight: '500', colors: '#1E2B45' } }, axisBorder: { show: true, color: '#E2EDF2' }, axisTicks: { show: true, color: '#E2EDF2' } },
+            colors: ['#7CC9D4'],
+            plotOptions: { bar: { horizontal: true, borderRadius: 8, barHeight: '70%' } },
+            dataLabels: { enabled: true, formatter: (v) => abbreviateNumber(v), style: { colors: ['#000000'], fontSize: '9px', fontWeight: '600' }, offsetX: 10 },
+            grid: { show: false },
+            tooltip: { y: { formatter: (val) => formatMoney(val) } }
+        });
+        charts.emendas.render();
+    }
+
+    function populateFilters() {
+        const projetosIds = [...new Set(projetos.map(p => p.id))].sort();
+        const coordenadores = [...new Set(projetos.map(p => p.coordenador))].sort();
+        const coords = [...new Set(projetos.map(p => p.coord))].sort();
+        const tipos = [...new Set(projetos.map(p => p.tipo))].sort();
+        const parceiros = [...new Set(projetos.map(p => p.parceiro))].sort();
+       
+        document.getElementById('filterProjeto').innerHTML = '<option value="">Todos</option>' + projetosIds.map(c => `<option value="${c}">${c}</option>`).join('');
+        document.getElementById('filterCoordenador').innerHTML = '<option value="">Todos</option>' + coordenadores.map(c => `<option value="${c}">${c.length > 35 ? c.substring(0,32)+'...' : c}</option>`).join('');
+        document.getElementById('filterCoordenacao').innerHTML = '<option value="">Todas</option>' + coords.map(c => `<option value="${c}">${c}</option>`).join('');
+        document.getElementById('filterTipo').innerHTML = '<option value="">Todos</option>' + tipos.map(t => `<option value="${t}">${t}</option>`).join('');
+        document.getElementById('filterParceiro').innerHTML = '<option value="">Todos</option>' + parceiros.map(p => `<option value="${p}">${p.length > 40 ? p.substring(0,37)+'...' : p}</option>`).join('');
+       
+        document.getElementById('detalheFilterProjeto').innerHTML = '<option value="">Selecione...</option>' + projetosIds.map(c => `<option value="${c}">${c}</option>`).join('');
+        document.getElementById('detalheFilterCoordenador').innerHTML = '<option value="">Selecione...</option>' + coordenadores.map(c => `<option value="${c}">${c.length > 35 ? c.substring(0,32)+'...' : c}</option>`).join('');
+       
+        document.getElementById('filterProjeto').onchange = () => { currentFilters.projeto = document.getElementById('filterProjeto').value; updateDashboard(); };
+        document.getElementById('filterCoordenador').onchange = () => { currentFilters.coordenador = document.getElementById('filterCoordenador').value; updateDashboard(); };
+        document.getElementById('filterCoordenacao').onchange = () => { currentFilters.coordenacao = document.getElementById('filterCoordenacao').value; updateDashboard(); };
+        document.getElementById('filterTipo').onchange = () => { currentFilters.tipo = document.getElementById('filterTipo').value; updateDashboard(); };
+        document.getElementById('filterParceiro').onchange = () => { currentFilters.parceiro = document.getElementById('filterParceiro').value; updateDashboard(); };
+       
+        document.getElementById('buscarProjetoBtn').onclick = () => buscarProjeto();
+        document.getElementById('limparDetalheBtn').onclick = () => limparDetalhe();
+    }
+
+    function updateDashboard() {
+        updateKPIs();
+        renderPieTED();
+        renderDonut();
+        renderHorizontalBar();
+        renderCoordenacao();
+        renderEmendas();
+    }
+
+    document.getElementById("clearFiltersBtn").addEventListener("click", () => {
+        currentFilters = { projeto: '', coordenador: '', coordenacao: '', tipo: '', parceiro: '' };
+        document.getElementById('filterProjeto').value = '';
+        document.getElementById('filterCoordenador').value = '';
+        document.getElementById('filterCoordenacao').value = '';
+        document.getElementById('filterTipo').value = '';
+        document.getElementById('filterParceiro').value = '';
+        updateDashboard();
+    });
+
+    populateFilters();
+    updateDashboard();
+   
+    window.mostrarDetalheProjeto = mostrarDetalheProjeto;
+    window.voltarParaLista = voltarParaLista;
+</script>
+</body>
+</html>
